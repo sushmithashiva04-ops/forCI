@@ -23,34 +23,41 @@ jobs:
 
       # ===== Build backend Docker image =====
       - name: Build Backend Image
-        run: |
-          docker build -f Dockerfile.backend -t ${{ secrets.DOCKER_HUB_USERNAME }}/backend:latest .
+        run: docker build -f Dockerfile.backend -t ${{ secrets.DOCKER_HUB_USERNAME }}/backend:latest .
 
       # ===== Build frontend Docker image =====
       - name: Build Frontend Image
-        run: |
-          docker build -f Dockerfile.frontend -t ${{ secrets.DOCKER_HUB_USERNAME }}/frontend:latest .
-
+        run: docker build -f Dockerfile.frontend -t ${{ secrets.DOCKER_HUB_USERNAME }}/frontend:latest .
 
       # ===== Push backend image =====
       - name: Push Backend Image
-        run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/backend:latest
+        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/backend:latest
 
       # ===== Push frontend image =====
       - name: Push Frontend Image
-        run: |
-          docker push ${{ secrets.DOCKER_HUB_USERNAME }}/frontend:latest
+        run: docker push ${{ secrets.DOCKER_HUB_USERNAME }}/frontend:latest
 
-      # ===== Deploy on Test Server =====
-      - name: Deploy on Test Server via SSH
+      # ===== Deploy on Test Server via SSH =====
+      - name: Deploy on Test Server
         uses: appleboy/ssh-action@v0.1.7
         with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ubuntu
-          key: ${{ secrets.SERVER_KEY }}
+          host: ${{ secrets.TEST_SERVER_HOST }}
+          username: ${{ secrets.TEST_SERVER_USER }}
+          key: ${{ secrets.TEST_SERVER_KEY }}
           port: 22
           script: |
+            echo "=== Installing Docker if not installed ==="
+            if ! command -v docker &> /dev/null; then
+              sudo apt update -y
+              sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+              echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+              sudo apt update -y
+              sudo apt install -y docker-ce docker-ce-cli containerd.io
+              sudo systemctl start docker
+              sudo systemctl enable docker
+            fi
+
             echo "Stopping old containers..."
             docker rm -f backend || true
             docker rm -f frontend || true
