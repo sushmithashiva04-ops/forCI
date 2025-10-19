@@ -24,7 +24,7 @@ jobs:
       # ===== Build backend Docker image =====
       - name: Build Backend Image
         run: |
-          docker build -f Dockerfile.backend -t ${{ secrets.DOCKER_HUB_USERNAME }}/frontend:latest .
+          docker build -f Dockerfile.backend -t ${{ secrets.DOCKER_HUB_USERNAME }}/backend:latest .
 
       # ===== Build frontend Docker image =====
       - name: Build Frontend Image
