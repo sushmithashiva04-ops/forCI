@@ -39,7 +39,7 @@ jobs:
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          key: ${{ secrets.SERVER_KEY }}
           script: |
             # Stop old containers if running
             docker stop backend || true
