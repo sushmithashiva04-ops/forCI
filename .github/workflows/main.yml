@@ -40,24 +40,30 @@ jobs:
           name: flask-app-image
           path: .
   deploy:
-    needs: build
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@v1.0.0
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/ubuntu/myapp
-            git pull origin main
-            docker build -t flask-app .
-            docker stop flask-app || true
-            docker rm flask-app || true
-            docker run -d -p 8080:8080 flask-app
-
+            # Stop old containers if running
+            docker stop backend || true
+            docker rm backend || true
+            docker stop frontend || true
+            docker rm frontend || true
+  
+            # Pull latest images from registry
+            docker pull username/backend:latest
+            docker pull username/frontend:latest
+  
+            # Run backend container
+            docker run -d --name backend -p 5000:5000 username/backend:latest
+  
+            # Run frontend container (connects to backend)
+            docker run -d --name frontend -p 8080:80 \
+              -e BACKEND_URL=http://SERVER_IP:5000 \
+              username/frontend:latest
+  
