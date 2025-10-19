@@ -30,15 +30,7 @@ jobs:
         run: |
           echo "No tests yet, skipping..."
       
-      - name: Build Docker image
-        run: |
-          docker build -t flask-app .
-
-      - name: Save Docker image as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: flask-app-image
-          path: .
+      
   deploy:
     runs-on: ubuntu-latest
     steps:
